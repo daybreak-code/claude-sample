@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞书书签保存器</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="logo">
+                <img src="icons/icon48.png" alt="飞书书签保存器" class="logo-icon">
+                <span class="logo-text">飞书书签保存器</span>
+            </div>
+            <div class="header-actions">
+                <button id="settingsBtn" class="icon-btn" title="设置">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 配置状态提示 -->
+        <div id="configAlert" class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>请先配置飞书应用信息</span>
+            <button id="configBtn" class="btn btn-sm">去配置</button>
+        </div>
+
+        <!-- 主表单 -->
+        <div id="mainForm" class="main-form">
+            <!-- 网页信息 -->
+            <div class="page-info">
+                <div class="form-group">
+                    <label class="form-label">网页地址</label>
+                    <div class="url-input">
+                        <input type="url" id="url" class="form-control" readonly>
+                        <button id="copyUrlBtn" class="icon-btn" title="复制URL">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">网页标题</label>
+                    <input type="text" id="title" class="form-control" readonly>
+                </div>
+            </div>
+
+            <!-- 用户输入 -->
+            <div class="user-input">
+                <div class="form-group">
+                    <label class="form-label" for="description">网站说明 *</label>
+                    <textarea id="description" class="form-control" rows="3" 
+                              placeholder="请输入这个网站的说明或用途..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="notes">备注</label>
+                    <textarea id="notes" class="form-control" rows="2" 
+                              placeholder="可以添加一些补充说明..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="tags">标签</label>
+                    <select id="tags" class="form-control">
+                        <option value="">请选择标签</option>
+                        <option value="工作">工作</option>
+                        <option value="学习">学习</option>
+                        <option value="娱乐">娱乐</option>
+                        <option value="工具">工具</option>
+                        <option value="新闻">新闻</option>
+                        <option value="购物">购物</option>
+                        <option value="社交">社交</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="actions">
+                <button id="saveBtn" class="btn btn-primary" disabled>
+                    <i class="fas fa-save"></i>
+                    <span>保存到飞书</span>
+                </button>
+                <button id="autoExtractBtn" class="btn btn-outline">
+                    <i class="fas fa-magic"></i>
+                    <span>自动提取</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <p class="loading-text">正在保存到飞书...</p>
+        </div>
+
+        <!-- 成功状态 -->
+        <div id="successState" class="success-state" style="display: none;">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <p class="success-text">保存成功！</p>
+            <button id="newSaveBtn" class="btn btn-outline">
+                <i class="fas fa-plus"></i>
+                <span>保存新的</span>
+            </button>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <p class="error-text"></p>
+            <button id="retryBtn" class="btn btn-outline">
+                <i class="fas fa-redo"></i>
+                <span>重试</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- URL存在确认对话框 -->
+    <div id="confirmDialog" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>URL已存在</h3>
+                <button class="modal-close" onclick="closeConfirmDialog()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>该网址已在飞书表格中存在，是否要覆盖更新？</p>
+                <div class="existing-info">
+                    <div class="info-item">
+                        <label>网站地址：</label>
+                        <span id="existingUrl"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>网站说明：</label>
+                        <span id="existingDescription"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>备注：</label>
+                        <span id="existingNotes"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>标签：</label>
+                        <span id="existingTags"></span>
+                    </div>
+                    <div class="info-item">
+                        <label>创建时间：</label>
+                        <span id="existingTime"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelUpdateBtn" class="btn btn-outline">取消</button>
+                <button id="confirmUpdateBtn" class="btn btn-primary">覆盖更新</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="common.js"></script>
+    <script src="record-manager.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞书书签保存器 - 设置</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="logo">
+                <img src="icons/icon48.png" alt="飞书书签保存器" class="logo-icon">
+                <span class="logo-text">飞书书签保存器</span>
+            </div>
+            <div class="header-subtitle">扩展设置</div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <!-- 飞书应用配置 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-cog"></i>
+                    飞书应用配置
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label" for="appId">App ID *</label>
+                    <input type="text" id="appId" class="form-control" 
+                           placeholder="请输入飞书应用的App ID">
+                    <div class="form-help">
+                        在飞书开放平台的应用详情页面获取
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="appSecret">App Secret *</label>
+                    <input type="password" id="appSecret" class="form-control" 
+                           placeholder="请输入飞书应用的App Secret">
+                    <div class="form-help">
+                        在飞书开放平台的应用详情页面获取
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="tableUrl">多维表格URL *</label>
+                    <input type="url" id="tableUrl" class="form-control" 
+                           placeholder="https://xxx.feishu.cn/base/xxx?table=xxx&view=xxx">
+                    <div class="form-help">
+                        请输入完整的飞书多维表格URL
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button id="testConnectionBtn" class="btn btn-outline">
+                        <i class="fas fa-plug"></i>
+                        <span>测试连接</span>
+                    </button>
+                    <button id="saveConfigBtn" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        <span>保存配置</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 连接状态 -->
+            <div id="connectionStatus" class="section status-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    连接状态
+                </h2>
+                <div id="connectionContent"></div>
+            </div>
+
+            <!-- 基本设置 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-sliders-h"></i>
+                    基本设置
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label" for="defaultTags">默认标签</label>
+                    <select id="defaultTags" class="form-control">
+                        <option value="">无默认标签</option>
+                        <option value="工作">工作</option>
+                        <option value="学习">学习</option>
+                        <option value="娱乐">娱乐</option>
+                        <option value="工具">工具</option>
+                        <option value="新闻">新闻</option>
+                        <option value="购物">购物</option>
+                        <option value="社交">社交</option>
+                        <option value="其他">其他</option>
+                    </select>
+                    <div class="form-help">
+                        设置保存书签时的默认标签
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-check">
+                        <input type="checkbox" id="autoSave" class="form-check-input">
+                        <span class="form-check-label">自动提取页面信息</span>
+                    </label>
+                    <div class="form-help">
+                        自动提取页面描述作为网站说明
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-check">
+                        <input type="checkbox" id="autoCopy" class="form-check-input">
+                        <span class="form-check-label">保存后自动复制URL</span>
+                    </label>
+                    <div class="form-help">
+                        保存成功后自动复制URL到剪贴板
+                    </div>
+                </div>
+            </div>
+
+            <!-- 使用说明 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-question-circle"></i>
+                    使用说明
+                </h2>
+
+                <div class="help-content">
+                    <div class="help-item">
+                        <h3>1. 创建飞书应用</h3>
+                        <ol>
+                            <li>访问 <a href="https://open.feishu.cn" target="_blank">飞书开放平台</a></li>
+                            <li>创建"自建应用"</li>
+                            <li>在应用详情中获取 App ID 和 App Secret</li>
+                        </ol>
+                    </div>
+
+                    <div class="help-item">
+                        <h3>2. 配置应用权限</h3>
+                        <ol>
+                            <li>在"权限管理"中添加权限：<br>
+                                <code>查看、评论、编辑和管理多维表格</code>
+                            </li>
+                            <li>发布应用到企业内</li>
+                        </ol>
+                    </div>
+
+                    <div class="help-item">
+                        <h3>3. 创建多维表格</h3>
+                        <ol>
+                            <li>在飞书中创建新的多维表格</li>
+                            <li>添加以下字段：
+                                <ul>
+                                    <li><strong>网站地址</strong> - 超链接类型</li>
+                                    <li><strong>网站的中文说明</strong> - 文本类型</li>
+                                    <li><strong>网站的备注</strong> - 多行文本类型</li>
+                                    <li><strong>网站的标签</strong> - 单选类型（选项：工作、学习、娱乐、工具、新闻、购物、社交、其他）</li>
+                                    <li><strong>创建时间</strong> - 日期时间类型</li>
+                                </ul>
+                            </li>
+                            <li>将表格分享给应用，设置"可编辑"权限</li>
+                            <li>复制表格的完整URL</li>
+                        </ol>
+                    </div>
+
+                    <div class="help-item">
+                        <h3>4. 使用扩展</h3>
+                        <ol>
+                            <li>在浏览器中打开要保存的网页</li>
+                            <li>点击扩展图标</li>
+                            <li>填写网站说明（必填）</li>
+                            <li>选择标签（可选）</li>
+                            <li>点击"保存到飞书"</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 高级设置 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-cogs"></i>
+                    高级设置
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-check">
+                        <input type="checkbox" id="debugMode" class="form-check-input">
+                        <span class="form-check-label">调试模式</span>
+                    </label>
+                    <div class="form-help">
+                        开启调试模式以查看详细日志信息
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button id="exportSettingsBtn" class="btn btn-outline">
+                        <i class="fas fa-download"></i>
+                        <span>导出设置</span>
+                    </button>
+                    <button id="importSettingsBtn" class="btn btn-outline">
+                        <i class="fas fa-upload"></i>
+                        <span>导入设置</span>
+                    </button>
+                    <button id="resetSettingsBtn" class="btn btn-danger">
+                        <i class="fas fa-trash"></i>
+                        <span>重置设置</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <div class="version">
+                版本 1.0.0
+            </div>
+            <div class="links">
+                <a href="https://github.com" target="_blank" class="link">
+                    <i class="fab fa-github"></i>
+                    GitHub
+                </a>
+                <a href="#" class="link" id="helpLink">
+                    <i class="fas fa-question-circle"></i>
+                    帮助
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文件导入对话框 -->
+    <input type="file" id="importFileInput" style="display: none;" accept=".json">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="common.js"></script>
+    <script src="record-manager.js"></script>
+    <script src="options.js"></script>
+</body>
+</html>
