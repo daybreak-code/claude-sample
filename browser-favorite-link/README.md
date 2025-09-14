@@ -119,16 +119,16 @@
 
 ```
 browser-favorite-link/
-├── manifest.json          # 扩展配置文件
+├── manifest.json          # 扩展配置文件 (Manifest V3)
 ├── popup.html            # 弹出窗口界面
-├── popup.js              # 弹出窗口逻辑
+├── popup.js              # 弹出窗口逻辑 (PopupManager类)
 ├── popup.css             # 弹出窗口样式
 ├── options.html          # 选项页面
-├── options.js            # 选项页面逻辑
+├── options.js            # 选项页面逻辑 (OptionsManager类)
 ├── options.css           # 选项页面样式
-├── background.js          # Service Worker
-├── common.js             # 公共函数
-├── record-manager.js     # 记录管理器
+├── background.js          # Service Worker (BackgroundService类)
+├── common.js             # 公共函数和常量 (Utils类, API配置)
+├── record-manager.js     # 记录管理器 (RecordManager类)
 ├── icons/                # 图标文件
 └── README.md             # 项目说明
 ```
@@ -136,39 +136,93 @@ browser-favorite-link/
 ### 核心组件
 
 #### Service Worker (background.js)
-- 处理所有飞书API调用
-- 管理扩展生命周期
-- 处理消息通信
+- **BackgroundService类**: 核心服务管理器
+- 处理所有飞书API调用和消息路由
+- 管理扩展生命周期和事件监听
+- 实现消息异步处理和错误管理
+- 支持保存、更新、检查、测试等多种操作
 
 #### Popup 界面 (popup.html/js/css)
-- 用户交互界面
-- 表单验证和提交
-- 状态管理和反馈
+- **PopupManager类**: 用户界面管理器
+- 实时页面信息加载和显示
+- 智能内容提取和表单自动填充
+- URL唯一性检查和确认对话框
+- 键盘快捷键支持 (Ctrl+S, Ctrl+E)
+- 响应式设计和暗色模式支持
 
 #### Options 页面 (options.html/js/css)
-- 配置管理界面
-- 连接测试功能
-- 设置导入导出
+- **OptionsManager类**: 配置管理器
+- 飞书应用凭据配置和管理
+- 实时连接测试和验证
+- 设置的本地存储和同步
+- 配置导入导出功能
 
 #### 记录管理器 (record-manager.js)
-- 飞书API封装
-- 数据格式化
-- 错误处理
+- **RecordManager类**: 飞书API封装器
+- 访问令牌获取和缓存管理
+- 表格和字段信息获取
+- 记录的CRUD操作 (创建、读取、更新)
+- 错误处理和重试机制
+
+#### 公共工具 (common.js)
+- **Utils类**: 通用工具函数
+- 配置验证和错误处理
+- URL解析和表格ID提取
+- 消息类型常量定义
+- API配置和端点管理
 
 ### API集成
 
 使用飞书开放平台的多维表格API：
-- 获取访问令牌
-- 读取表格信息
-- 添加/更新记录
-- 字段映射和转换
 
-### 数据流
+#### 认证流程
+- **tenant_access_token**: 使用内部应用认证方式
+- **令牌缓存**: 自动管理令牌有效期，提前5分钟刷新
+- **错误处理**: 完整的API错误代码处理和用户友好的错误提示
 
-1. 用户在popup中填写信息
-2. popup.js发送消息到background.js
-3. background.js调用飞书API
-4. API返回结果，更新UI状态
+#### 核心API端点
+```
+POST /auth/v3/tenant_access_token/internal     # 获取访问令牌
+GET  /bitable/v1/apps/{appToken}/tables          # 获取表格列表
+GET  /bitable/v1/apps/{appToken}/tables/{tableId}/fields?view_id={viewId}  # 获取字段信息
+POST /bitable/v1/apps/{appToken}/tables/{tableId}/records  # 添加记录
+PATCH /bitable/v1/apps/{appToken}/tables/{tableId}/records/{recordId}  # 更新记录
+GET  /bitable/v1/apps/{appToken}/tables/{tableId}/records?filter={filter}  # 查询记录
+```
+
+#### URL解析机制
+- **完整URL支持**: 支持包含appToken、tableId、viewId的完整表格URL
+- **自动解析**: `parseTableUrl`函数自动提取所需参数
+- **兼容性**: 支持不带table参数的URL，自动获取第一个表格
+
+### 数据流架构
+
+```
+用户操作 → Popup界面 → 消息传递 → Service Worker → 飞书API
+    ↓
+UI状态更新 ← 消息响应 ← API结果处理 ← 数据处理 ← HTTP请求
+```
+
+#### 详细流程
+1. **用户交互**: 在popup中填写信息，点击保存
+2. **消息传递**: popup.js通过chrome.runtime.sendMessage发送消息
+3. **服务处理**: background.js接收消息，调用RecordManager处理
+4. **API调用**: 通过fetch API调用飞书开放平台接口
+5. **数据处理**: 处理API响应，格式化数据
+6. **状态更新**: 通过sendResponse返回结果，更新UI状态
+
+### 消息类型系统
+
+```javascript
+// 消息类型常量 (common.js)
+const MESSAGE_TYPES = {
+  SAVE_URL: 'SAVE_URL',           // 保存URL
+  UPDATE_URL: 'UPDATE_URL',       // 更新URL
+  CHECK_URL: 'CHECK_URL',         // 检查URL是否存在
+  TEST_CONNECTION: 'TEST_CONNECTION',  // 测试连接
+  GET_FIELDS: 'GET_FIELDS'        // 获取字段信息
+};
+```
 
 ## 🐛 故障排除
 
@@ -205,6 +259,97 @@ browser-favorite-link/
 | 1254062 | 单选字段转换失败 | 检查单选字段格式 |
 | 1254064 | 日期时间字段转换失败 | 检查日期字段格式 |
 
+## 🔧 开发指南
+
+### 开发环境搭建
+
+1. **克隆项目**
+   ```bash
+   git clone <repository-url>
+   cd browser-favorite-link
+   ```
+
+2. **加载扩展**
+   - 打开Chrome浏览器，访问 `chrome://extensions/`
+   - 开启"开发者模式"
+   - 点击"加载已解压的扩展程序"
+   - 选择项目文件夹
+
+### 调试技巧
+
+#### Service Worker调试
+1. 在扩展管理页面点击"检查视图" → "Service Worker"
+2. 使用Console查看日志输出
+3. 使用Network面板监控API请求
+4. 使用Application面板查看Storage数据
+
+#### Popup调试
+1. 右键点击扩展图标，选择"检查弹出式窗口"
+2. 使用Elements面板检查UI结构
+3. 使用Console查看交互日志
+4. 使用Sources面板设置断点调试
+
+#### 常用调试命令
+```javascript
+// 查看存储的配置
+chrome.storage.sync.get(null, console.log);
+
+// 清除存储的配置
+chrome.storage.sync.clear();
+
+// 发送测试消息
+chrome.runtime.sendMessage({type: 'TEST_CONNECTION', data: {...}});
+```
+
+### 代码规范
+
+#### JavaScript规范
+- 使用ES6+语法特性
+- 采用类组织代码结构
+- 使用async/await处理异步操作
+- 保持函数职责单一
+- 添加适当的错误处理
+
+#### 命名约定
+- 类名使用PascalCase: `PopupManager`
+- 函数名使用camelCase: `saveToFeishu`
+- 常量使用UPPER_SNAKE_CASE: `MESSAGE_TYPES`
+- 私有方法使用下划线前缀: `_privateMethod`
+
+#### 注释规范
+- 类和主要方法添加JSDoc注释
+- 复杂逻辑添加行内注释
+- API调用添加参数说明
+- 错误处理添加错误代码说明
+
+### 测试策略
+
+#### 功能测试
+1. **连接测试**: 验证飞书API连接
+2. **保存测试**: 测试URL保存功能
+3. **更新测试**: 测试URL更新功能
+4. **重复测试**: 测试URL重复检查
+
+#### 边界测试
+- 空配置测试
+- 无效URL测试
+- 网络异常测试
+- API限制测试
+
+#### 性能测试
+- 令牌缓存效率
+- 消息传递延迟
+- UI响应速度
+- 内存使用情况
+
+### 发布流程
+
+1. **版本更新**: 修改manifest.json中的version
+2. **代码审查**: 检查代码质量和规范
+3. **功能测试**: 确保所有功能正常
+4. **打包扩展**: 使用Chrome扩展打包工具
+5. **发布文档**: 更新README和变更日志
+
 ## 🔄 更新日志
 
 ### v1.0.0 (2024-01-15)
@@ -213,6 +358,8 @@ browser-favorite-link/
 - 智能信息提取
 - URL唯一性检查和覆盖更新
 - 完整的配置管理界面
+- Manifest V3架构支持
+- 响应式UI设计
 
 ## 🤝 贡献指南
 
